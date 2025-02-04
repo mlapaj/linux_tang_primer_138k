@@ -256,7 +256,7 @@ static void __sched __mutex_lock_slowpath(struct mutex *lock);
 void __sched mutex_lock(struct mutex *lock)
 {
 	might_sleep();
-
+    volatile int tmp = *((int *) lock);
 	if (!__mutex_trylock_fast(lock))
 		__mutex_lock_slowpath(lock);
 }

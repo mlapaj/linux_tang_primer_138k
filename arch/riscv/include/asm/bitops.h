@@ -198,6 +198,7 @@ legacy:
 	unsigned long __res, __mask;				\
 	__mask = BIT_MASK(nr);					\
 	__asm__ __volatile__ (					\
+		"lw t0, 0%1\n"			\
 		__AMO(op) #ord " %0, %2, %1"			\
 		: "=r" (__res), "+A" (addr[BIT_WORD(nr)])	\
 		: "r" (mod(__mask))				\
@@ -207,6 +208,7 @@ legacy:
 
 #define __op_bit_ord(op, mod, nr, addr, ord)			\
 	__asm__ __volatile__ (					\
+		"lw t0,0%0\n"			\
 		__AMO(op) #ord " zero, %1, %0"			\
 		: "+A" (addr[BIT_WORD(nr)])			\
 		: "r" (mod(BIT_MASK(nr)))			\

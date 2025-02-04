@@ -21,6 +21,7 @@
 	    riscv_has_extension_unlikely(RISCV_ISA_EXT_ZABHA)) {		\
 		__asm__ __volatile__ (						\
 			prepend							\
+		    "	lw t0, %1\n"			\
 			"	amoswap" swap_sfx " %0, %z2, %1\n"		\
 			swap_append						\
 			: "=&r" (r), "+A" (*(p))				\
@@ -37,7 +38,8 @@
 										\
 		__asm__ __volatile__ (						\
 		       prepend							\
-		       "0:	lr.w %0, %2\n"					\
+		       "0:	lw   %0, 0%2\n"					\
+		       "	lr.w %0, %2\n"					\
 		       "	and  %1, %0, %z4\n"				\
 		       "	or   %1, %1, %z3\n"				\
 		       "	sc.w" sc_sfx " %1, %1, %2\n"			\
@@ -55,6 +57,7 @@
 ({									\
 	__asm__ __volatile__ (						\
 		prepend							\
+		"	lw t0, %1\n"			\
 		"	amoswap" sfx " %0, %2, %1\n"			\
 		append							\
 		: "=r" (r), "+A" (*(p))					\
@@ -154,7 +157,8 @@
 										\
 		__asm__ __volatile__ (						\
 			sc_prepend							\
-			"0:	lr.w %0, %2\n"					\
+			"0:	lw   %0, 0%2\n"					\
+			"	lr.w %0, %2\n"					\
 			"	and  %1, %0, %z5\n"				\
 			"	bne  %1, %z3, 1f\n"				\
 			"	and  %1, %0, %z6\n"				\
@@ -193,7 +197,8 @@
 									\
 		__asm__ __volatile__ (					\
 			sc_prepend					\
-			"0:	lr" lr_sfx " %0, %2\n"			\
+			"0:	lw %0, 0%2\n"			\
+			"	lr" lr_sfx " %0, %2\n"			\
 			"	bne  %0, %z3, 1f\n"			\
 			"	sc" sc_sfx " %1, %z4, %2\n"		\
 			"	bnez %1, 0b\n"				\
@@ -377,6 +382,7 @@ static __always_inline void __cmpwait(volatile void *ptr,
 		goto no_zawrs;
 	case 4:
 		asm volatile(
+		"	lw	    %0, 0%1\n"
 		"	lr.w	%0, %1\n"
 		"	xor	%0, %0, %2\n"
 		"	bnez	%0, 1f\n"

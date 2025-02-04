@@ -55,6 +55,7 @@ static __always_inline							\
 void arch_atomic##prefix##_##op(c_type i, atomic##prefix##_t *v)	\
 {									\
 	__asm__ __volatile__ (						\
+		"	lw t0,0%0\n"	\
 		"	amo" #asm_op "." #asm_type " zero, %1, %0"	\
 		: "+A" (v->counter)					\
 		: "r" (I)						\
@@ -91,6 +92,7 @@ c_type arch_atomic##prefix##_fetch_##op##_relaxed(c_type i,		\
 {									\
 	register c_type ret;						\
 	__asm__ __volatile__ (						\
+		"	lw t0,0%0\n"	\
 		"	amo" #asm_op "." #asm_type " %1, %2, %0"	\
 		: "+A" (v->counter), "=r" (ret)				\
 		: "r" (I)						\
@@ -102,6 +104,7 @@ c_type arch_atomic##prefix##_fetch_##op(c_type i, atomic##prefix##_t *v)	\
 {									\
 	register c_type ret;						\
 	__asm__ __volatile__ (						\
+		"	lw t0,0%0\n"	\
 		"	amo" #asm_op "." #asm_type ".aqrl  %1, %2, %0"	\
 		: "+A" (v->counter), "=r" (ret)				\
 		: "r" (I)						\
@@ -198,7 +201,8 @@ ATOMIC_OPS(xor, xor, i)
 #define _arch_atomic_fetch_add_unless(_prev, _rc, counter, _a, _u, sfx)	\
 ({									\
 	__asm__ __volatile__ (						\
-		"0:	lr." sfx "     %[p],  %[c]\n"			\
+		"0:	lw %[p], %[c]\n"			\
+		"	lr." sfx "     %[p],  %[c]\n"			\
 		"	beq	       %[p],  %[u], 1f\n"		\
 		"	add            %[rc], %[p], %[a]\n"		\
 		"	sc." sfx ".rl  %[rc], %[rc], %[c]\n"		\
@@ -237,7 +241,8 @@ static __always_inline s64 arch_atomic64_fetch_add_unless(atomic64_t *v, s64 a, 
 #define _arch_atomic_inc_unless_negative(_prev, _rc, counter, sfx)	\
 ({									\
 	__asm__ __volatile__ (						\
-		"0:	lr." sfx "      %[p],  %[c]\n"			\
+		"0:	lw %[p], %[c]\n"			\
+		"	lr." sfx "      %[p],  %[c]\n"			\
 		"	bltz            %[p],  1f\n"			\
 		"	addi            %[rc], %[p], 1\n"		\
 		"	sc." sfx ".rl   %[rc], %[rc], %[c]\n"		\
@@ -263,7 +268,8 @@ static __always_inline bool arch_atomic_inc_unless_negative(atomic_t *v)
 #define _arch_atomic_dec_unless_positive(_prev, _rc, counter, sfx)	\
 ({									\
 	__asm__ __volatile__ (						\
-		"0:	lr." sfx "      %[p],  %[c]\n"			\
+		"0:	lw %[p], %[c]\n"			\
+		"	lr." sfx "      %[p],  %[c]\n"			\
 		"	bgtz            %[p],  1f\n"			\
 		"	addi            %[rc], %[p], -1\n"		\
 		"	sc." sfx ".rl   %[rc], %[rc], %[c]\n"		\
@@ -289,7 +295,8 @@ static __always_inline bool arch_atomic_dec_unless_positive(atomic_t *v)
 #define _arch_atomic_dec_if_positive(_prev, _rc, counter, sfx)		\
 ({									\
 	__asm__ __volatile__ (						\
-		"0:	lr." sfx "     %[p],  %[c]\n"			\
+		"0:	lw %[p], %[c]\n"			\
+		"	lr." sfx "     %[p],  %[c]\n"			\
 		"	addi           %[rc], %[p], -1\n"		\
 		"	bltz           %[rc], 1f\n"			\
 		"	sc." sfx ".rl  %[rc], %[rc], %[c]\n"		\
